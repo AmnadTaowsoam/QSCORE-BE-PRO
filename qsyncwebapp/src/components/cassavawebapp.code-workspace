@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "../../../../../cassavaChip/cassava_webApplication/cassavawebapp"
+		},
+		{
+			"path": "../.."
+		},
+		{
+			"path": "../../../../../cassavaChip/cassava_api"
+		},
+		{
+			"path": "../../../../Q_sync_api"
+		}
+	],
+	"settings": {}
+}

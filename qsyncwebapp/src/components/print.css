@@ -1,0 +1,41 @@
+@media print {
+    @page {
+        size: A1;
+        margin: 0;
+        margin-top: 0mm;
+        /* Adjust the top margin as needed */
+    }
+
+    .print-content {
+        position: fixed;
+        top: 25mm;
+        width: 100%;
+        transform: scale(1.2);
+        transform-origin: center;
+    }
+
+    body {
+        width: 100%;
+        margin: 100mm 50mm 0 50mm; /* ปรับ margin-top ให้ขยับเนื้อหาลงมา */
+        padding: 0;
+        overflow: visible;
+        transform: scale(2.0); /* กลับค่า scale กลับไปเป็น 1 */
+        transform-origin: center;
+    }
+
+    .print-layout {
+        width: 100%;
+        max-width: none;
+        min-height: 100%;
+        margin: 5;
+        page-break-before: always;
+    }
+
+    /* Show all elements when printing */
+    .navbar-logo, .navbar, .text-input-section {
+        display: none !important;
+    }
+}
+
+
+

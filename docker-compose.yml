@@ -1,0 +1,23 @@
+version: '3'
+services:
+  frontend:
+    build:
+      context: ./qsyncwebapp
+      dockerfile: Dockerfile
+    ports:
+      - "8003:8003"
+    container_name: qsyncapp
+    # ลบ volumes สำหรับการใช้งานใน production
+    # volumes:
+    #   - ./frontend/cassava_webapplication:/app
+
+  backend:
+    build:
+      context: ./Q_sync_api
+      dockerfile: Dockerfile
+    ports:
+      - "8002:8002"
+    container_name: qsyncserv
+    # ลบ volumes หากไม่จำเป็นสำหรับการใช้งานใน production
+    # volumes:
+    #   - ./backend/cassava_api:/app
