@@ -29,7 +29,7 @@ const TextInput = ({ onProcessText }) => {
         setText('');  // ตั้งค่า text เป็นสตริงว่าง
     };
     
-    
+
     const handleSubmit = async () => {
         try {
             const processedData = processText(text);

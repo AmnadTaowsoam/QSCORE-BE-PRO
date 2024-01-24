@@ -18,7 +18,7 @@ const Navbar = () => {
         <nav className="bg-teal-900 text-input-section">
             <div className="h-10vh flex justify-between z-50 text-white lg:py-5 px-20 py-4">
                 <div className="flex items-center flex-1">
-                    <img src={btglogoA} alt="Logo" className="w-30 h-10 navbar-logo" />
+                    <img src={btglogoA} alt="Logo" className="w-30 h-8 navbar-logo" />
                     </div>
                         <div className="lg:flex md:flex flex-1 items center justify-end font-normal hidden">
                             <div className="flex-10">

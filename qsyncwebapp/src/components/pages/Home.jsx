@@ -13,14 +13,14 @@ const Home = () => {
 
     return (
         <>
-        <div>
-            <div className='flex justify-center ml-4 mt-4 mb-5 hover:text-center text-4xl font-custom font-bold text-input-section'>
+        <div className='bg-gray-100'>
+            <div className='flex justify-center m-1 hover:text-center text-3xl font-custom font-bold text-input-section'>
                 <h1>Queue Information and QR Code Generator</h1>
                 
             </div>
             {/* <hr className='border-t ml-7 mr-4' style={{ borderWidth: '1px' }} /> */}
             <div className="w-full p-4 flex justify-center items-center">
-                    <div className="mt-2 w-60 mr-0 text-input-section">
+                    <div className="m-4 w-60 mr-0 text-input-section">
                         <TextInput onProcessText={handleProcessText} />
                     </div>
                     <div className="w-full ml-0 print-content">
@@ -28,7 +28,6 @@ const Home = () => {
                     </div>
                 </div>
         </div>
-            
         </>
     );
 };

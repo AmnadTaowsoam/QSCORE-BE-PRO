@@ -1,5 +1,5 @@
 const QSCORE_ENDPOINT={
-    "apiEndpoint": "http://localhost:8002",
+    "apiEndpoint": "http://10.10.0.32:8002",
     "username": 'qaqs_qi',
     "password": 'P@ssw0rd'
 };
