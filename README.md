@@ -35,7 +35,6 @@ Qscore นี้เป็นส่วนที่ให้บริการ ก
 
     docker run -d -p 8002:8002 --name qsore_serv qsore_serv:latest
 
-
 # Contribute
 TODO: Explain how other users and developers can contribute to make your code better. 
 
