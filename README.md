@@ -1,15 +1,40 @@
 # Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+Qscore นี้เป็นส่วนที่ให้บริการ การclustering Vendor ที่ Supply วัตถุดิบที่ใช้ในการผลิตอาหารสัตว์ โดยทำหน้าที่ในการแยก คัดกรอง Vendor ที่มีประวัติคุณภาพที่ดี และส่งให้กับผู้ใช้งานผ่านหน้า UI
 
 # Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
 1.	Installation process
+    
+    - python environment:
+
+            python -m venv env
+            env\scripts\activate
+
+    - Library requirements:
+
+            pip install -r requirements.txt
+
 2.	Software dependencies
+
+        Linux/Ubuntu
+        Docker container
+        python
+
 3.	Latest releases
+
+        https://betagro-dev@dev.azure.com/betagro-dev/D2023-006-QI-Inspection/_git/QSCORE-BE
+
 4.	API references
 
 # Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+
+## Create Images
+
+    docker build -t qsore_serv:latest .
+
+## Run Images
+
+    docker run -d -p 8002:8002 --name qsore_serv qsore_serv:latest
+
 
 # Contribute
 TODO: Explain how other users and developers can contribute to make your code better. 
