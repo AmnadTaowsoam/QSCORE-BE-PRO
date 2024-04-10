@@ -1,0 +1,162 @@
+# Node.js with React
+# Build a Node.js project that uses React.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
+
+trigger:
+  - production # change to your branch
+
+variables:
+  containerRegistryConection: 'BtgAppPrdAcr' # e.g ACR-project
+  kubernetesServiceConection: 'BtgAppPrdAks' # e.g project-nonprd-aks
+  imageName: 'qscore-be' # e.g project-fe
+  containerImageRepository: 'btgappprdacr.azurecr.io/$(imageName)' # e.g project.azurecr.io/imageName
+  environment: 'production' # e.g development
+  pool: 'ArgoQi-Pool' # e.g PROJECT-NONPRD-POOL
+  APMServiceName: qscore-be # e.g project-name-be
+
+# CI
+stages:
+  - stage: Build
+    displayName: Build stage
+    condition: succeeded()
+    jobs:
+      - job: Build
+        displayName: Build
+        pool:
+          vmImage: 'ubuntu-latest'
+
+        steps:
+          - script: |
+              echo $sourceVersion
+              commitHash=${sourceVersion:0:8}
+              echo $commitHash
+              echo "##vso[task.setvariable variable=commitHash]$commitHash"
+            env: { sourceVersion: $(Build.SourceVersion) }
+            displayName: Git Hash 8-digit
+
+          - task: Docker@2
+            displayName: build
+            inputs:
+              containerRegistry: '$(containerRegistryConection)'
+              repository: '$(imageName)'
+              command: 'build'
+              Dockerfile: '**/Dockerfile'
+              tags: |
+                prod-latest
+                prod-$(Build.SourceVersion)
+
+          - task: Docker@2
+            displayName: push
+            inputs:
+              containerRegistry: '$(containerRegistryConection)'
+              repository: '$(imageName)'
+              command: 'push'
+              tags: prod-latest
+
+          - task: Docker@2
+            displayName: push
+            inputs:
+              containerRegistry: '$(containerRegistryConection)'
+              repository: '$(imageName)'
+              command: 'push'
+              tags: prod-$(Build.SourceVersion)
+
+          - task: CopyFiles@2
+            displayName: 'Copy Files to: $(build.artifactstagingdirectory)'
+            inputs:
+              SourceFolder: kube/prod
+              Contents: '**'
+              TargetFolder: $(build.artifactstagingdirectory)
+
+          - task: PublishBuildArtifacts@1
+            displayName: 'Publish Artifact: drop'
+
+  # CD
+  - stage: Deploy
+    displayName: Deploy stage
+    dependsOn: Build
+    condition: succeeded()
+    jobs:
+      - deployment: Deploy
+        environment: '$(environment)'
+        pool:
+          name: '$(pool)'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: |
+                    echo $sourceVersion
+                    commitHash=${sourceVersion:0:8}
+                    echo $commitHash
+                    echo "##vso[task.setvariable variable=commitHash]$commitHash"
+                  env: { sourceVersion: $(Build.SourceVersion) }
+                  displayName: Git Hash 8-digit
+
+                - task: DownloadBuildArtifacts@0
+                  displayName: 'Download Artifacts'
+                  inputs:
+                    buildType: 'current'
+                    downloadType: 'single'
+                    artifactName: 'drop'
+                    downloadPath: '$(System.DefaultWorkingDirectory)'
+                    cleanDestinationFolder: true
+
+                - task: CmdLine@2
+                  inputs:
+                    script: |
+                      cat << EOF > $(System.DefaultWorkingDirectory)/drop/datadog-labels.yaml
+                      apiVersion: builtin
+                      kind: LabelTransformer
+                      metadata:
+                        name: datadog-label
+                      labels:
+                        tags.datadoghq.com/env: prod
+                        tags.datadoghq.com/service: $(APMServiceName)
+                        tags.datadoghq.com/version: $(commitHash)
+                      fieldSpecs:
+                      - path: metadata/labels
+                        create: true
+                      - path: spec/template/metadata/labels
+                        create: true
+                      EOF
+
+                      cat << EOF > $(System.DefaultWorkingDirectory)/drop/kustomization.yaml
+                      resources:
+                      - deployment-prod.yaml
+                      images: 
+                      - name: "$(containerImageRepository)"
+                        newTag: prod-$(Build.SourceVersion)
+                      transformers:
+                        - datadog-labels.yaml
+                      EOF
+                  displayName: 'Create Kustomization file'
+
+                - task: Kubernetes@1
+                  displayName: kubectl apply Kustomization
+                  inputs:
+                    connectionType: Kubernetes Service Connection
+                    kubernetesServiceEndpoint: '$(kubernetesServiceConection)'
+                    command: apply
+                    arguments: '-k $(System.DefaultWorkingDirectory)/drop/'
+
+                - task: Kubernetes@1
+                  displayName: kubectl apply services
+                  inputs:
+                    connectionType: Kubernetes Service Connection
+                    kubernetesServiceEndpoint: '$(kubernetesServiceConection)'
+                    useConfigurationFile: true
+                    configuration: '$(System.DefaultWorkingDirectory)/drop/service-prod.yaml'
+                    command: apply
+                    forceUpdate: true
+
+                - task: Kubernetes@1
+                  displayName: kubectl apply ingress
+                  inputs:
+                    connectionType: Kubernetes Service Connection
+                    kubernetesServiceEndpoint: '$(kubernetesServiceConection)'
+                    useConfigurationFile: true
+                    configuration: '$(System.DefaultWorkingDirectory)/drop/ingress-prod.yaml'
+                    command: apply
+                    forceUpdate: true

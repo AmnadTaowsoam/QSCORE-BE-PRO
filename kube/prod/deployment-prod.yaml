@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: qscore-be
+    tags.datadoghq.com/env: prod
+    tags.datadoghq.com/service: qscore-be
+    tags.datadoghq.com/version: version
+  name: qscore-be
+  namespace: qscore
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qscore-be
+  template:
+    metadata:
+      annotations:
+        ad.datadoghq.com/qscore-be.logs: '[{"service":"qscore-be","tags":["env:prod"]}]'
+        admission.datadoghq.com/js-lib.version: v4.16.0
+      labels:
+        admission.datadoghq.com/enabled: 'true'
+        app: qscore-be
+        tags.datadoghq.com/env: prod
+        tags.datadoghq.com/service: qscore-be
+        tags.datadoghq.com/version: version
+    spec:
+      containers:
+        - image: btgappprdacr.azurecr.io/qscore-be:prod-latest # e.g farmtechnonprdacr.azurecr.io/dev-farmtech-be:dev-latest
+          imagePullPolicy: Always
+          name: qscore-be
+          ports:
+            - containerPort: 8000
+              name: http
+              protocol: TCP

@@ -1,0 +1,30 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: qscore-ingress
+  namespace: qscore
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: agroquality-qscore.betagro.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: qscore-fe-srv
+                port:
+                  number: 80
+
+          - path: /qscore-api
+            pathType: Prefix
+            backend:
+              service:
+                name: qscore-be-srv
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - agroquality-qscore.betagro.com
+      secretName: star-betagro-com
