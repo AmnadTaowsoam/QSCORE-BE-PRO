@@ -1,44 +1,63 @@
-# Introduction 
-Qscore นี้เป็นส่วนที่ให้บริการ การclustering Vendor ที่ Supply วัตถุดิบที่ใช้ในการผลิตอาหารสัตว์ โดยทำหน้าที่ในการแยก คัดกรอง Vendor ที่มีประวัติคุณภาพที่ดี และส่งให้กับผู้ใช้งานผ่านหน้า UI
+# Quality_DBService
 
-# Getting Started
-1.	Installation process
-    
-    - python environment:
+# PosgreSQL
 
-            python -m venv env
-            env\scripts\activate
+## postgres images
 
-    - Library requirements:
+    docker pull postgres
 
-            pip install -r requirements.txt
+    # run images
+    docker run --name QualityDB -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=password -p 5432:5432 -v qualityvolume:/var/lib/postgresql/data -d --restart always postgres
 
-2.	Software dependencies
+    # install
+    sudo apt install postgresql-client
+    psql -U postgres -h localhost
 
-        Linux/Ubuntu
-        Docker container
-        python
+# Pgadmin
+## run pgadmin in container
 
-3.	Latest releases
+    docker run -p 8080:80 \
+    -e 'PGADMIN_DEFAULT_EMAIL=qi@qi.com' \
+    -e 'PGADMIN_DEFAULT_PASSWORD=password' \
+    -d --restart always dpage/pgadmin4
 
-        https://betagro-dev@dev.azure.com/betagro-dev/D2023-006-QI-Inspection/_git/QSCORE-BE
 
-4.	API references
+## Run scripts setup database
+### 1.Create database
+    psql -U postgres -d postgres -h localhost -f /home/qi/quality_project/Quality_DBService/db/migrations/001_create_databases.sql
 
-# Build and Test
+### 2.Create table
 
-## Create Images
+    # users
+    psql -U postgres -d users -h localhost -f /home/qi/quality_project/Quality_DBService/db/seeds/users.sql
 
-    docker build -t qsore_serv:latest .
+    # cassava
+    psql -U postgres -d cassava -h localhost -f /home/qi/quality_project/Quality_DBService/db/seeds/cassava.sql
 
-## Run Images
+    # corns
+    psql -U postgres -d corns -h localhost -f /home/qi/quality_project/Quality_DBService/db/seeds/corns.sql
 
-    docker run -d -p 8002:8002 --name qsore_serv qsore_serv:latest
+    # qscore
+    psql -U postgres -d qscore -h localhost -f /home/qi/quality_project/Quality_DBService/db/seeds/qscore.sql
 
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
+    # corn_moist
+    psql -U postgres -d corns_moist -h localhost -f /home/qi/quality_project/Quality_DBService/db/seeds/corn_moist.sql
 
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+# project:
+## Build images
+    docker build -t quality-db .
+
+## Run images
+
+    docker run --network="host" -p 3000:3000 \
+        -e DB_HOST=127.0.0.1 \
+        -e DB_USERNAME=postgres \
+        -e DB_PASSWORD=password \
+        -e USERS_DB_NAME=users \
+        -e QSCORE_DB_NAME=qscore \
+        -e CASSAVA_DB_NAME=cassava \
+        -e CORNS_DB_NAME=corns \
+        -e CORNS_MOIST_DB_NAME=corns_moist \
+        -e DB_PORT=5432 \
+        --name quality-db-container --restart always quality-db
+
