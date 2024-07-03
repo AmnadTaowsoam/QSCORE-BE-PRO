@@ -1,0 +1,131 @@
+version: '3.8'
+services:
+  ########### PostgreSQL ################
+  users-db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: ${USERS_DB_NAME}
+      POSTGRES_USER: ${USERS_DB_USERNAME}
+      POSTGRES_PASSWORD: ${USERS_DB_PASSWORD}
+    volumes:
+      - uservolume-data:/var/lib/postgresql/data
+      - ./db/init/users.sql:/docker-entrypoint-initdb.d/users.sql
+    ports:
+      - "${USERS_DB_PORT}:5432"
+    networks:
+      - qscore-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${USERS_DB_USERNAME} -d ${USERS_DB_NAME}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+
+  qscore-db:
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: ${QSCORE_DB_NAME}
+      POSTGRES_USER: ${QSCORE_DB_USERNAME}
+      POSTGRES_PASSWORD: ${QSCORE_DB_PASSWORD}
+    volumes:
+      - qscorevolume-data:/var/lib/postgresql/data
+      - ./db/init/qscore.sql:/docker-entrypoint-initdb.d/qscore.sql
+    ports:
+      - "${QSCORE_DB_PORT}:5432"
+    networks:
+      - qscore-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${QSCORE_DB_USERNAME} -d ${QSCORE_DB_NAME}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+
+  ########### Pgadmin ################
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
+    ports:
+      - "${PGADMIN_PORT}:80"
+    depends_on:
+      - users-db
+      - qscore-db
+    networks:
+      - qscore-net
+    restart: on-failure
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+
+  ########### Microservice ################
+  user-service:
+    build: ./USER-SERVICE
+    depends_on:
+      - users-db
+    env_file:
+      - .env
+    ports:
+      - "${USER_SERVICE_PORT}:8000"
+    networks:
+      - qscore-net
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 500M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+    restart: always
+
+  qscore-service:
+    build: ./QSCORE-SERVICE
+    depends_on:
+      - qscore-db
+    env_file:
+      - .env
+    ports:
+      - "${QSCORE_SERVICE_PORT}:8002"
+    networks:
+      - qscore-net
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 500M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+    restart: always
+
+volumes:
+  uservolume-data:
+    driver: local
+  qscorevolume-data:
+    driver: local
+
+networks:
+  qscore-net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.25.0.0/16"
