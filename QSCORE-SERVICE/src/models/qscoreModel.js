@@ -60,10 +60,24 @@ const deleteQscore = async (id) => {
     }
 };
 
+const getQscoreByVendorAndMaterial = async (vendor, material) => {
+    try {
+        const result = await qscorePool.query(
+            'SELECT * FROM qscore.qscores  WHERE vendor = $1 AND material = $2',
+            [vendor, material]
+        );
+        return result.rows[0];
+    } catch (error) {
+        console.error('Error querying qscore by vendor and material:', error.message, error.stack);
+        throw error;
+    }
+};
+
 module.exports = {
     getQscores,
     getQscoreById,
     createQscore,
     updateQscore,
     deleteQscore,
+    getQscoreByVendorAndMaterial
 };

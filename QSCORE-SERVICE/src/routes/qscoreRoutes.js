@@ -70,4 +70,21 @@ router.get('/qscores/search', async (req, res) => {
     res.status(501).json({ error: 'Not implemented' });
 });
 
+
+// Get qscore by vendor and material
+router.get('/qscore', async (req, res) => {
+    const { vendor, material } = req.query;
+    try {
+        const qscore = await qscoreModel.getQscoreByVendorAndMaterial(vendor, material);
+        if (qscore) {
+            res.json(qscore);
+        } else {
+            res.json({ evaluate: 'Normal Inspection', sampling: 'Sampling' });
+        }
+    } catch (error) {
+        console.error('Error getting qscore by vendor and material:', error.message, error.stack);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 module.exports = router;

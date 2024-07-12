@@ -16,7 +16,7 @@ router.use(cookieParser());
 
 // Function to generate access token
 const generateAccessToken = (apiKey) => {
-    return jwt.sign({ apiKey }, ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
+    return jwt.sign({ apiKey }, ACCESS_TOKEN_SECRET, { expiresIn: '200m' });
 };
 
 // Function to generate refresh token
